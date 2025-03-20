@@ -7,7 +7,7 @@ import numpy as np
 # Load the Pix2Pix GAN model (update this with your specific model path)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Define a simple Pix2Pix Generator class (replace with your actual model)
+# Assuming the model is a simple Pix2Pix model (you need to replace this with your actual model)
 class Generator(torch.nn.Module):
     def __init__(self):
         super(Generator, self).__init__()
@@ -20,6 +20,7 @@ class Generator(torch.nn.Module):
 
 # Load the pre-trained model
 model = Generator().to(device)
+# model.load_state_dict(torch.load('/workspaces/Gannn/pix2pix_model.pth', map_location=device))
 model.load_state_dict(torch.load('/workspaces/Gannn/pix2pix_model.pth', map_location=device), strict=False)
 model.eval()
 
@@ -37,38 +38,23 @@ def preprocess_image(image):
 
 # Function to generate colorized image
 def generate_colorized_image(model, image):
+    # Preprocess the image
     processed_image = preprocess_image(image)
-
+    
+    # Perform inference using the Pix2Pix model
     with torch.no_grad():
         output = model(processed_image)
-
-    print("Output tensor shape before processing:", output.shape)
     
-    # Remove batch dimension and convert to numpy array
-    output = output.squeeze(0).cpu().numpy()
-    print("Output tensor shape after squeeze:", output.shape)
-
-    # Check if the output has three channels (RGB)
-    if len(output.shape) == 3 and output.shape[0] == 3:
-        output = output.transpose(1, 2, 0)  # Convert to HWC format
-        print("Output tensor shape after transpose:", output.shape)
-    else:
-        raise ValueError(f"Unexpected output shape: {output.shape}")
-
-    # Denormalize from [-1, 1] to [0, 255]
-    output = (output + 1) * 127.5
+    # Convert output to a usable format for display (denormalize)
+    output = output.squeeze(0).cpu().numpy().transpose(1, 2, 0)  # Remove batch dimension and convert to HWC
+    output = (output + 1) * 127.5  # Denormalize back to [0, 255]
     output = np.clip(output, 0, 255).astype(np.uint8)
-
-    # Handle grayscale outputs by converting them to RGB
-    if output.ndim == 3 and output.shape[2] == 1:
-        print("Converting grayscale to RGB...")
-        output = np.repeat(output, 3, axis=2)
-
-    # Ensure final shape is valid for display
+    
+    # Ensure the image is in the correct shape (height, width, 3)
     if output.ndim == 3 and output.shape[2] == 3:
         return output
     else:
-        raise ValueError(f"Invalid final output shape: {output.shape}")
+        raise ValueError("Output image does not have the correct shape for display.")
 
 # Streamlit app layout
 st.title("Pix2Pix Image Colorization")
@@ -85,9 +71,7 @@ if uploaded_image is not None:
     st.image(image, caption="Original Image", use_column_width=True)
     
     # Colorize the image using the Pix2Pix model
-    try:
-        colorized_image = generate_colorized_image(model, image)
-        # Display the colorized image
-        st.image(colorized_image, caption="Colorized Image", use_column_width=True)
-    except ValueError as e:
-        st.error(f"Error: {e}")
+    colorized_image = generate_colorized_image(model, image)
+    
+    # Display the colorized image
+    st.image(colorized_image, caption="Colorized Image", use_column_width=True)
