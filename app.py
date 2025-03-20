@@ -3,7 +3,7 @@ from PIL import Image
 import torch
 import torchvision.transforms as transforms
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 # Load the Pix2Pix GAN model (update this with your specific model path)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
