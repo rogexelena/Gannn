@@ -22,7 +22,8 @@ class Generator(torch.nn.Module):
 
 # Load the pre-trained model
 model = Generator().to(device)
-model.load_state_dict(torch.load('pix2pix_model.pth', map_location=device))
+# model.load_state_dict(torch.load('pix2pix_model.pth', map_location=device))
+model.load_state_dict(torch.load('pix2pix_model.pth', map_location=device), strict=False)
 model.eval()
 
 # Function to preprocess image for model input
